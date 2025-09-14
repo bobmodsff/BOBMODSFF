@@ -1,0 +1,224 @@
+-- Léo Hub vFinal - Mod Menu Profissional Delta Executor
+
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LeoHub"
+ScreenGui.Parent = game.CoreGui
+
+-- Menu Frame Principal
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 240, 0, 380)
+Frame.Position = UDim2.new(0.5, -120, 0.5, -190)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+-- Bolinha para reabrir menu
+local ReopenButton = Instance.new("TextButton")
+ReopenButton.Size = UDim2.new(0, 50, 0, 50)
+ReopenButton.Position = UDim2.new(0, 10, 1, -60)
+ReopenButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+ReopenButton.Text = "🔹"
+ReopenButton.TextSize = 30
+ReopenButton.Font = Enum.Font.SourceSansBold
+ReopenButton.TextColor3 = Color3.fromRGB(255,255,255)
+ReopenButton.Parent = ScreenGui
+ReopenButton.Visible = false
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,40)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.Text = "✨ Léo Hub vFinal ✨"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.Parent = Frame
+
+-- Botão fechar menu
+local CloseMenu = Instance.new("TextButton")
+CloseMenu.Size = UDim2.new(0, 40, 0, 40)
+CloseMenu.Position = UDim2.new(1, -45, 0, 5)
+CloseMenu.BackgroundColor3 = Color3.fromRGB(200,50,50)
+CloseMenu.Text = "X"
+CloseMenu.TextColor3 = Color3.fromRGB(255,255,255)
+CloseMenu.Font = Enum.Font.GothamBold
+CloseMenu.TextSize = 20
+CloseMenu.Parent = Frame
+
+CloseMenu.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    ReopenButton.Visible = true
+end)
+
+ReopenButton.MouseButton1Click:Connect(function()
+    Frame.Visible = true
+    ReopenButton.Visible = false
+end)
+
+-- Função criar botão
+local function createButton(posY, text)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 40)
+    btn.Position = UDim2.new(0,10,0,posY)
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 18
+    btn.Parent = Frame
+    return btn
+end
+
+-- Criando botões principais
+local SpeedButton = createButton(60,"Ativar Speed Hack")
+local NoClipButton = createButton(110,"Ativar NoClip")
+local ESPButton = createButton(160,"Ativar ESP")
+local GodButton = createButton(210,"Ativar God Mode")
+local TeleportButton = createButton(260,"Teleportar")
+
+-- Variáveis
+local speedEnabled = false
+local noclipEnabled = false
+local espEnabled = false
+local godEnabled = false
+local espHighlights = {}
+
+-- Speed Hack
+SpeedButton.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        player.Character.Humanoid.WalkSpeed = 100
+        SpeedButton.Text = "Desativar Speed Hack"
+    else
+        player.Character.Humanoid.WalkSpeed = 16
+        SpeedButton.Text = "Ativar Speed Hack"
+    end
+end)
+
+-- NoClip
+NoClipButton.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    if noclipEnabled then
+        NoClipButton.Text = "Desativar NoClip"
+    else
+        NoClipButton.Text = "Ativar NoClip"
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled and player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ESP com Highlight seguro
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        ESPButton.Text = "Desativar ESP"
+        for _, plr in pairs(game.Players:GetPlayers()) do
+            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                if not espHighlights[plr] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Adornee = plr.Character
+                    highlight.FillColor = Color3.fromRGB(0,255,0)
+                    highlight.OutlineColor = Color3.fromRGB(0,255,0)
+                    highlight.Parent = player:WaitForChild("PlayerGui")
+                    espHighlights[plr] = highlight
+                end
+            end
+        end
+    else
+        ESPButton.Text = "Ativar ESP"
+        for _, hl in pairs(espHighlights) do
+            if hl then hl:Destroy() end
+        end
+        espHighlights = {}
+    end
+end)
+
+-- God Mode
+GodButton.MouseButton1Click:Connect(function()
+    godEnabled = not godEnabled
+    if godEnabled then
+        GodButton.Text = "Desativar God Mode"
+        if player.Character then
+            player.Character.Humanoid.MaxHealth = math.huge
+            player.Character.Humanoid.Health = math.huge
+        end
+    else
+        GodButton.Text = "Ativar God Mode"
+        if player.Character then
+            player.Character.Humanoid.MaxHealth = 100
+            player.Character.Humanoid.Health = 100
+        end
+    end
+end)
+
+-- Teleport Frame
+local TPFrame = Instance.new("Frame")
+TPFrame.Size = UDim2.new(0,200,0,240)
+TPFrame.Position = UDim2.new(0.5, 120, 0.5, -120)
+TPFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+TPFrame.Visible = false
+TPFrame.Parent = ScreenGui
+
+local TPClose = Instance.new("TextButton")
+TPClose.Size = UDim2.new(0,35,0,35)
+TPClose.Position = UDim2.new(1,-40,0,5)
+TPClose.BackgroundColor3 = Color3.fromRGB(200,50,50)
+TPClose.Text = "X"
+TPClose.TextColor3 = Color3.fromRGB(255,255,255)
+TPClose.Font = Enum.Font.GothamBold
+TPClose.TextSize = 20
+TPClose.Parent = TPFrame
+
+TPClose.MouseButton1Click:Connect(function()
+    TPFrame.Visible = false
+end)
+
+-- Atualizar lista de jogadores
+local function refreshTPList()
+    for _, v in pairs(TPFrame:GetChildren()) do
+        if v:IsA("TextButton") and v ~= TPClose then
+            v:Destroy()
+        end
+    end
+    local yPos = 50
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,0,30)
+            btn.Position = UDim2.new(0,5,0,yPos)
+            btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            btn.Text = plr.Name
+            btn.TextColor3 = Color3.fromRGB(255,255,255)
+            btn.Font = Enum.Font.GothamBold
+            btn.TextSize = 16
+            btn.Parent = TPFrame
+
+            btn.MouseButton1Click:Connect(function()
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame
+                end
+            end)
+            yPos = yPos + 35
+        end
+    end
+end
+
+TeleportButton.MouseButton1Click:Connect(function()
+    refreshTPList()
+    TPFrame.Visible = true
+end)
