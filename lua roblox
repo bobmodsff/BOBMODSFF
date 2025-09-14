@@ -1,20 +1,22 @@
--- Léo Hub vFinal+Voar+Aimbot - Mod Menu Profissional Delta Executor
+-- Léo Hub Ultimate - Mod Menu Profissional Delta Executor
+-- Autor: Léo
 
 local player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
 
 -- ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LeoHub"
 ScreenGui.Parent = game.CoreGui
 
--- Menu Frame Principal
+-- Menu Frame
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 260, 0, 480)
-Frame.Position = UDim2.new(0.5, -130, 0.5, -240)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Size = UDim2.new(0, 300, 0, 550)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -275)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true
@@ -77,7 +79,7 @@ local function createButton(posY, text)
     return btn
 end
 
--- Criando botões principais
+-- Botões principais
 local SpeedButton = createButton(60,"Ativar Speed Hack")
 local NoClipButton = createButton(110,"Ativar NoClip")
 local ESPButton = createButton(160,"Ativar ESP")
@@ -85,6 +87,7 @@ local GodButton = createButton(210,"Ativar God Mode")
 local TeleportButton = createButton(260,"Teleportar")
 local FlyButton = createButton(310,"Ativar Voar")
 local AimbotButton = createButton(360,"Ativar Aimbot")
+local CrosshairSizeSlider = createButton(410,"Ajustar Crosshair")
 
 -- Variáveis
 local speedEnabled = false
@@ -98,7 +101,9 @@ local espHighlights = {}
 local aimbotEnabled = false
 local aimFOV = 100
 local aimSmooth = 0.25
+local crosshairSize = 10
 
+-- Funções principais
 -- Speed Hack
 SpeedButton.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
@@ -131,7 +136,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ESP com Highlight
+-- ESP
 ESPButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     if espEnabled then
@@ -178,7 +183,7 @@ end)
 -- Teleport Frame
 local TPFrame = Instance.new("Frame")
 TPFrame.Size = UDim2.new(0,200,0,240)
-TPFrame.Position = UDim2.new(0.5, 130, 0.5, -120)
+TPFrame.Position = UDim2.new(0.5, 150, 0.5, -120)
 TPFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 TPFrame.Visible = false
 TPFrame.Parent = ScreenGui
@@ -279,42 +284,49 @@ end)
 
 -- Crosshair
 local Crosshair = Instance.new("Frame")
-Crosshair.Size = UDim2.new(0,10,0,10)
-Crosshair.Position = UDim2.new(0.5, -5, 0.5, -5)
+Crosshair.Size = UDim2.new(0,crosshairSize,0,crosshairSize)
+Crosshair.Position = UDim2.new(0.5, -crosshairSize/2, 0.5, -crosshairSize/2)
 Crosshair.BackgroundColor3 = Color3.fromRGB(255,0,0)
 Crosshair.BorderSizePixel = 0
 Crosshair.AnchorPoint = Vector2.new(0.5,0.5)
 Crosshair.Parent = ScreenGui
 
--- Aimbot
-AimbotButton.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    if aimbotEnabled then
-        AimbotButton.Text = "Desativar Aimbot"
-    else
-        AimbotButton.Text = "Ativar Aimbot"
-    end
+-- Ajuste do Crosshair
+CrosshairSizeSlider.MouseButton1Click:Connect(function()
+    crosshairSize = crosshairSize + 5
+    if crosshairSize > 50 then crosshairSize = 10 end
+    Crosshair.Size = UDim2.new(0,crosshairSize,0,crosshairSize)
+    Crosshair.Position = UDim2.new(0.5, -crosshairSize/2, 0.5, -crosshairSize/2)
+    CrosshairSizeSlider.Text = "Crosshair: "..crosshairSize
 end)
 
-local function getScreenDistance(pos)
-    local screenPos, onScreen = camera:WorldToViewportPoint(pos)
-    if onScreen then
-        local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
-        return (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-    end
-    return math.huge
-end
+-- Aimbot somente ao atirar
+aimFOV = 100
+aimSmooth = 0.25
+local mouseDown = false
+
+mouse.Button1Down:Connect(function()
+    mouseDown = true
+end)
+
+mouse.Button1Up:Connect(function()
+    mouseDown = false
+end)
 
 RunService.RenderStepped:Connect(function()
-    if aimbotEnabled then
+    if aimbotEnabled and mouseDown then
         local closestPlayer
         local shortestDistance = math.huge
         for _, plr in pairs(game.Players:GetPlayers()) do
             if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = getScreenDistance(plr.Character.HumanoidRootPart.Position)
-                if dist < shortestDistance and dist < aimFOV then
-                    closestPlayer = plr
-                    shortestDistance = dist
+                local screenPos, onScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+                    if dist < shortestDistance and dist < aimFOV then
+                        closestPlayer = plr
+                        shortestDistance = dist
+                    end
                 end
             end
         end
@@ -324,5 +336,15 @@ RunService.RenderStepped:Connect(function()
             local newCFrame = CFrame.new(currentCFrame.Position, targetPos)
             camera.CFrame = currentCFrame:Lerp(newCFrame, aimSmooth)
         end
+    end
+end)
+
+-- Ativar/desativar Aimbot
+AimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        AimbotButton.Text = "Desativar Aimbot"
+    else
+        AimbotButton.Text = "Ativar Aimbot"
     end
 end)
