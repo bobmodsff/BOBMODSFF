@@ -1,4 +1,4 @@
--- Léo Hub Ultimate v2 - Mod Menu Final para Roblox Delta
+-- Léo Hub Ultimate v3 - Mod Menu Final para Roblox Delta
 -- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -9,18 +9,19 @@ local Mouse = LocalPlayer:GetMouse()
 
 -- Menu Config
 local MenuEnabled = false
-local MenuPosition = Vector2.new(100, 100)
-local MenuSize = Vector2.new(250, 350)
+local MenuPosition = Vector2.new(100,100)
+local MenuSize = Vector2.new(270,380)
 
 -- Funções do menu
 local Functions = {
     Aimbot = false,
     ESP = false,
-    Crosshair = true
+    Crosshair = true,
+    PullEnemies = false
 }
 local AimbotFOV = 50
 
--- Debounce para clique
+-- Debounce de clique
 local CanClick = true
 
 -- Menu Box
@@ -34,7 +35,7 @@ MenuBox.Visible = MenuEnabled
 
 -- Menu Title
 local Title = Drawing.new("Text")
-Title.Text = "Léo Hub Ultimate v2"
+Title.Text = "Léo Hub Ultimate v3"
 Title.Position = MenuPosition + Vector2.new(10,10)
 Title.Size = 22
 Title.Color = Color3.fromRGB(0,255,255)
@@ -44,7 +45,7 @@ Title.Visible = MenuEnabled
 -- Close Button X
 local Close1 = Drawing.new("Line")
 local Close2 = Drawing.new("Line")
-local CloseOffset = Vector2.new(MenuSize.X - 25, 15)
+local CloseOffset = Vector2.new(MenuSize.X-25,15)
 Close1.Color = Color3.fromRGB(255,0,0)
 Close2.Color = Color3.fromRGB(255,0,0)
 Close1.Thickness = 2
@@ -99,7 +100,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Função para pegar inimigo mais próximo dentro do FOV
+-- Função para inimigo mais próximo
 local function getClosestEnemy()
     local closestPlayer = nil
     local shortestDistance = AimbotFOV
@@ -107,7 +108,7 @@ local function getClosestEnemy()
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
             if onScreen then
-                local distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).magnitude
+                local distance = (Vector2.new(Mouse.X,Mouse.Y)-Vector2.new(screenPos.X,screenPos.Y)).magnitude
                 if distance < shortestDistance then
                     shortestDistance = distance
                     closestPlayer = player
@@ -116,6 +117,19 @@ local function getClosestEnemy()
         end
     end
     return closestPlayer
+end
+
+-- Função PullEnemies
+local function PullEnemiesInFront(distance)
+    distance = distance or 10
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local frontPos = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector*distance)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(frontPos)
+        end
+    end
 end
 
 -- Controle de clique
@@ -131,24 +145,22 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Loop principal único
+-- Loop principal
 RunService.RenderStepped:Connect(function()
-    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+    local mousePos = Vector2.new(Mouse.X,Mouse.Y)
 
-    -- Atualiza bolinha de abrir menu
-    if mouseDown and CanClick then
-        if (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
-            MenuEnabled = not MenuEnabled
-            MenuBox.Visible = MenuEnabled
-            Title.Visible = MenuEnabled
-            Close1.Visible = MenuEnabled
-            Close2.Visible = MenuEnabled
-            CanClick = false
-            task.delay(0.2, function() CanClick = true end)
-        end
+    -- Bolinha abrir menu
+    if mouseDown and CanClick and (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
+        MenuEnabled = not MenuEnabled
+        MenuBox.Visible = MenuEnabled
+        Title.Visible = MenuEnabled
+        Close1.Visible = MenuEnabled
+        Close2.Visible = MenuEnabled
+        CanClick = false
+        task.delay(0.2,function() CanClick = true end)
     end
 
-    -- Atualiza X de fechar
+    -- X de fechar
     Close1.From = MenuPosition + CloseOffset
     Close1.To = Close1.From + Vector2.new(12,12)
     Close2.From = Close1.From + Vector2.new(0,12)
@@ -163,56 +175,53 @@ RunService.RenderStepped:Connect(function()
             Close1.Visible = false
             Close2.Visible = false
             CanClick = false
-            task.delay(0.2, function() CanClick = true end)
+            task.delay(0.2,function() CanClick = true end)
         end
     end
 
-    -- Atualiza crosshair
-    if Functions.Crosshair then
-        Crosshair.Position = Vector2.new(Mouse.X, Mouse.Y)
-        Crosshair.Visible = true
-    else
-        Crosshair.Visible = false
-    end
+    -- Crosshair
+    Crosshair.Visible = Functions.Crosshair
+    Crosshair.Position = Vector2.new(Mouse.X,Mouse.Y)
 
     -- Aimbot
     if Functions.Aimbot and mouseDown then
         local target = getClosestEnemy()
         if target then
             local targetPos = target.Character.HumanoidRootPart.Position
-            -- Suavização da mira (opcional)
-            local cf = Camera.CFrame
-            Camera.CFrame = cf:Lerp(CFrame.new(cf.Position, targetPos), 0.3)
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position,targetPos),0.3)
         end
     end
 
     -- ESP
     if Functions.ESP then
-        for player, line in pairs(ESPLines) do
+        for player,line in pairs(ESPLines) do
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local pos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-                line.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                line.To = Vector2.new(pos.X, pos.Y)
+                line.From = Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y)
+                line.To = Vector2.new(pos.X,pos.Y)
                 line.Visible = true
             else
                 line.Visible = false
             end
         end
     else
-        for _, line in pairs(ESPLines) do
-            line.Visible = false
-        end
+        for _,line in pairs(ESPLines) do line.Visible=false end
     end
 
-    -- Toggles dentro do menu
+    -- PullEnemies
+    if Functions.PullEnemies then
+        PullEnemiesInFront(15)
+    end
+
+    -- Toggles no menu
     if MenuEnabled and mouseDown and CanClick then
         local startY = 50
-        for name, state in pairs(Functions) do
-            local togglePos = MenuPosition + Vector2.new(20, startY)
+        for name,state in pairs(Functions) do
+            local togglePos = MenuPosition + Vector2.new(20,startY)
             if (togglePos - mousePos).magnitude <= 50 then
                 Functions[name] = not state
                 CanClick = false
-                task.delay(0.2, function() CanClick = true end)
+                task.delay(0.2,function() CanClick = true end)
             end
             startY = startY + 30
         end
