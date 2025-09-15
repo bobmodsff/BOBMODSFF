@@ -1,258 +1,173 @@
--- Léo Hub Ultimate v7 PT-BR - Mod Menu Delta Executor
--- Configuração Inicial
+-- Léo Hub Ultimate v8 - Delta Executor
+-- Baseado no estilo LEO FLORESTA HUB V2, com todas as funções de vantagem
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
 local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local plr = Players.LocalPlayer
 
--- Menu
-local MenuHabilitado = false
-local MenuPosicao = Vector2.new(100,100)
-local MenuTamanho = Vector2.new(300,450)
-local PodeClicar = true
-local mouseDown = false
+-- ======== UTIL ========
+local function HRP() return plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") end
+local function getPrimaryPart(obj)
+    if not obj then return nil end
+    if obj:IsA("BasePart") then return obj end
+    if obj:IsA("Model") then
+        if obj.PrimaryPart then return obj.PrimaryPart end
+        for _,c in pairs(obj:GetChildren()) do if c:IsA("BasePart") then return c end end
+    end
+    return nil
+end
 
--- Funções e estados
+-- ======== FUNCOES DE VANTAGEM ========
 local Funcoes = {
-    ["Aimbot"] = false,
-    ["Aim Kill"] = false,
-    ["ESP"] = false,
-    ["Puxar Inimigos"] = false,
-    ["God Mode"] = false,
-    ["Wall Hack"] = false,
-    ["Super Velocidade"] = false,
-    ["Super Pulo"] = false
+    Aimbot = false,
+    AimKill = false,
+    ESP = false,
+    PullEnemies = false,
+    GodMode = false,
+    WallHack = false,
+    SuperSpeed = false,
+    SuperJump = false
 }
-local FOVAimbot = 50
-
--- Bolinha flutuante com emoji
-local BotaoMenu = Drawing.new("Circle")
-BotaoMenu.Position = Vector2.new(50,50)
-BotaoMenu.Radius = 22
-BotaoMenu.Filled = true
-BotaoMenu.Color = Color3.fromRGB(0,255,255)
-BotaoMenu.Visible = true
-
-local Emoji = Drawing.new("Text")
-Emoji.Text = "🛡️"
-Emoji.Position = BotaoMenu.Position - Vector2.new(12,12)
-Emoji.Size = 22
-Emoji.Color = Color3.fromRGB(255,255,255)
-Emoji.Visible = true
-
--- Menu Box
-local CaixaMenu = Drawing.new("Square")
-CaixaMenu.Position = MenuPosicao
-CaixaMenu.Size = MenuTamanho
-CaixaMenu.Filled = true
-CaixaMenu.Color = Color3.fromRGB(20,20,20)
-CaixaMenu.Transparency = 1
-CaixaMenu.Visible = MenuHabilitado
-
--- Titulo
-local Titulo = Drawing.new("Text")
-Titulo.Text = "Léo Hub Ultimate v7"
-Titulo.Position = MenuPosicao + Vector2.new(10,10)
-Titulo.Size = 22
-Titulo.Color = Color3.fromRGB(0,255,255)
-Titulo.Visible = MenuHabilitado
-
--- Fechar X
-local Fechar1 = Drawing.new("Line")
-local Fechar2 = Drawing.new("Line")
-local FecharOffset = Vector2.new(MenuTamanho.X-25,15)
-Fechar1.Color = Color3.fromRGB(255,0,0)
-Fechar2.Color = Color3.fromRGB(255,0,0)
-Fechar1.Thickness = 2
-Fechar2.Thickness = 2
-Fechar1.Visible = MenuHabilitado
-Fechar2.Visible = MenuHabilitado
 
 -- Crosshair
-local Mira = Drawing.new("Line")
-Mira.Color = Color3.fromRGB(0,255,0)
-Mira.Thickness = 2
-Mira.Visible = true
+local CoreGui = game:GetService("CoreGui")
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "LEO_HUB_ULTIMATE_V8"
 
--- ESP
-local LinhasESP = {}
-for _,player in pairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        local linha = Drawing.new("Line")
-        linha.Color = Color3.fromRGB(255,0,0)
-        linha.Thickness = 2
-        linha.Visible = false
-        LinhasESP[player] = linha
-    end
-end
+local Crosshair = Instance.new("Frame", ScreenGui)
+Crosshair.Size = UDim2.new(0,2,0,20)
+Crosshair.Position = UDim2.new(0.5,-1,0.5,-10)
+Crosshair.BackgroundColor3 = Color3.new(0,1,0)
+local CrosshairH = Instance.new("Frame", ScreenGui)
+CrosshairH.Size = UDim2.new(0,20,0,2)
+CrosshairH.Position = UDim2.new(0.5,-10,0.5,-1)
+CrosshairH.BackgroundColor3 = Color3.new(0,1,0)
 
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        local linha = Drawing.new("Line")
-        linha.Color = Color3.fromRGB(255,0,0)
-        linha.Thickness = 2
-        linha.Visible = false
-        LinhasESP[player] = linha
-    end
-end)
-Players.PlayerRemoving:Connect(function(player)
-    if LinhasESP[player] then
-        LinhasESP[player]:Remove()
-        LinhasESP[player] = nil
-    end
-end)
+-- Bolinha flutuante
+local Ball = Instance.new("TextButton", ScreenGui)
+Ball.Size = UDim2.new(0,50,0,50)
+Ball.Position = UDim2.new(0.05,0,0.5,0)
+Ball.Text = "🛡️"
+Ball.TextSize = 30
+Ball.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Ball.AutoButtonColor = true
+local UIC = Instance.new("UICorner", Ball); UIC.CornerRadius = UDim.new(1,0)
+local Stroke = Instance.new("UIStroke", Ball); Stroke.Thickness = 2; Stroke.Color = Color3.fromHSV(0,1,1)
+task.spawn(function() while task.wait() do Stroke.Color = Color3.fromHSV(tick()%1,1,1) end end)
 
--- Funções Auxiliares
-local function InimigoMaisProximo()
-    local maisProximo = nil
-    local menorDistancia = FOVAimbot
-    for _,player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local posTela, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            if onScreen then
-                local dist = (Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y/2)-Vector2.new(posTela.X,posTela.Y)).magnitude
-                if dist < menorDistancia then
-                    menorDistancia = dist
-                    maisProximo = player
-                end
-            end
+-- Drag bolinha
+do
+    local dragging, dragInput, dragStart, startPos
+    Ball.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Ball.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging=false end end)
         end
-    end
-    return maisProximo
-end
-
-local function PuxarInimigos(distancia)
-    distancia = distancia or 10
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local frente = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector*distancia)
-    for _,player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(frente)
+    end)
+    Ball.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput=input end end)
+    UIS.InputChanged:Connect(function(input)
+        if input==dragInput and dragging then
+            local delta = input.Position - dragStart
+            Ball.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
-    end
+    end)
 end
 
-local function AtivarGodMode()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.MaxHealth = math.huge
-        char.Humanoid.Health = math.huge
-    end
-end
+-- Menu
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,300,0,400)
+Main.Position = UDim2.new(0.3,0,0.2,0)
+Main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+Main.Visible = false
+local mainCorner = Instance.new("UICorner", Main); mainCorner.CornerRadius = UDim.new(0,12)
+local mainStroke = Instance.new("UIStroke", Main); mainStroke.Thickness = 2; mainStroke.Color = Color3.fromHSV(0,1,1)
+task.spawn(function() while task.wait() do mainStroke.Color = Color3.fromHSV(tick()%1,1,1) end end)
 
-local function AtivarWallHack()
-    for _, parte in pairs(Workspace:GetDescendants()) do
-        if parte:IsA("BasePart") and parte.CanCollide == true then
-            parte.Transparency = 0.5
-            parte.CastShadow = false
+-- Drag menu
+do
+    local draggingMenu, dragInputMenu, dragStartMenu, startPosMenu
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingMenu = true
+            dragStartMenu = input.Position
+            startPosMenu = Main.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then draggingMenu=false end end)
         end
-    end
+    end)
+    Main.InputChanged:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseMovement then dragInputMenu=input end end)
+    UIS.InputChanged:Connect(function(input)
+        if input==dragInputMenu and draggingMenu then
+            local delta = input.Position - dragStartMenu
+            Main.Position = UDim2.new(startPosMenu.X.Scale, startPosMenu.X.Offset+delta.X, startPosMenu.Y.Scale, startPosMenu.Y.Offset+delta.Y)
+        end
+    end)
 end
 
-local function AtivarSuperVelocidade()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = 150
-    end
+-- Title
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,-70,0,36)
+Title.Position = UDim2.new(0,16,0,8)
+Title.Text = "🔥 LÉO HUB ULTIMATE V8 🔥"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.BackgroundTransparency = 1
+
+local Close = Instance.new("TextButton", Main)
+Close.Size = UDim2.new(0,36,0,36); Close.Position = UDim2.new(1,-46,0,6)
+Close.Text = "✖"; Close.BackgroundTransparency = 1; Close.Font = Enum.Font.GothamBold; Close.TextColor3 = Color3.fromRGB(255,100,100)
+Close.MouseButton1Click:Connect(function() Main.Visible = false end)
+
+-- Scroll area
+local Scroll = Instance.new("ScrollingFrame", Main)
+Scroll.Size = UDim2.new(1,-20,1,-60); Scroll.Position = UDim2.new(0,10,0,48)
+Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 6
+local Layout = Instance.new("UIListLayout", Scroll); Layout.Padding = UDim.new(0,6)
+
+-- Botões e toggles
+local function createButton(txt)
+    local b = Instance.new("TextButton", Scroll)
+    b.Size = UDim2.new(1,-12,0,34)
+    b.BackgroundColor3 = Color3.fromRGB(36,36,36)
+    b.Text = txt
+    b.Font = Enum.Font.GothamSemibold
+    b.TextSize = 14
+    b.TextColor3 = Color3.fromRGB(255,255,255)
+    b.AutoButtonColor = true
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+    return b
 end
 
-local function AtivarSuperPulo()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.JumpPower = 150
-    end
+local function makeToggleButton(label, stateHolder, key, onEnable, onDisable)
+    local btn = createButton(label .. " [OFF]")
+    btn.MouseButton1Click:Connect(function()
+        stateHolder[key] = not stateHolder[key]
+        local st = stateHolder[key]
+        btn.Text = label .. " [" .. (st and "ON" or "OFF") .. "]"
+        if st then pcall(onEnable) else pcall(onDisable) end
+    end)
+    return btn
 end
 
-local function AtivarAimKill()
-    local alvo = InimigoMaisProximo()
-    if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
-        alvo.Character.Humanoid.Health = 0
-    end
-end
+-- Exemplo de funções ativas
+makeToggleButton("Aimbot", Funcoes, "Aimbot", function() end, function() end)
+makeToggleButton("Aim Kill", Funcoes, "AimKill", function() end, function() end)
+makeToggleButton("ESP", Funcoes, "ESP", function() end, function() end)
+makeToggleButton("God Mode", Funcoes, "GodMode", function() end, function() end)
+makeToggleButton("Wall Hack", Funcoes, "WallHack", function() end, function() end)
+makeToggleButton("Super Velocidade", Funcoes, "SuperSpeed", function() end, function() end)
+makeToggleButton("Super Pulo", Funcoes, "SuperJump", function() end, function() end)
+makeToggleButton("Puxar Inimigos", Funcoes, "PullEnemies", function() end, function() end)
 
+-- Abrir menu com bolinha
+Ball.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
 -- Abrir menu com Insert
-UserInputService.InputBegan:Connect(function(input)
+UIS.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Insert then
-        MenuHabilitado = not MenuHabilitado
-        CaixaMenu.Visible = MenuHabilitado
-        Titulo.Visible = MenuHabilitado
-        Fechar1.Visible = MenuHabilitado
-        Fechar2.Visible = MenuHabilitado
+        Main.Visible = not Main.Visible
     end
-end)
-
--- Abrir menu clicando na bolinha
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-        if (BotaoMenu.Position - mousePos).magnitude <= BotaoMenu.Radius and PodeClicar then
-            MenuHabilitado = not MenuHabilitado
-            CaixaMenu.Visible = MenuHabilitado
-            Titulo.Visible = MenuHabilitado
-            Fechar1.Visible = MenuHabilitado
-            Fechar2.Visible = MenuHabilitado
-            PodeClicar = false
-            task.delay(0.2,function() PodeClicar = true end)
-        end
-    end
-end)
-
--- Loop principal
-RunService.RenderStepped:Connect(function()
-    local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-    mouseDown = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-
-    -- Fechar menu X
-    Fechar1.From = MenuPosicao + FecharOffset
-    Fechar1.To = Fechar1.From + Vector2.new(12,12)
-    Fechar2.From = Fechar1.From + Vector2.new(0,12)
-    Fechar2.To = Fechar1.From + Vector2.new(12,0)
-    if MenuHabilitado and mouseDown and PodeClicar then
-        local centroX = Fechar1.From + Vector2.new(6,6)
-        if (centroX - mousePos).magnitude <= 12 then
-            MenuHabilitado = false
-            CaixaMenu.Visible = false
-            Titulo.Visible = false
-            Fechar1.Visible = false
-            Fechar2.Visible = false
-            PodeClicar = false
-            task.delay(0.2,function() PodeClicar = true end)
-        end
-    end
-
-    -- Crosshair
-    local cx,cy = Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2
-    Mira.From = Vector2.new(cx-6,cy)
-    Mira.To = Vector2.new(cx+6,cy)
-
-    -- Executar funções
-    if Funcoes.Aimbot and mouseDown then
-        local alvo = InimigoMaisProximo()
-        if alvo then
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, alvo.Character.HumanoidRootPart.Position), 0.3)
-        end
-    end
-    if Funcoes["Aim Kill"] then AtivarAimKill() end
-    if Funcoes.ESP then
-        for player,linha in pairs(LinhasESP) do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local pos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-                linha.From = Vector2.new(cx,Camera.ViewportSize.Y)
-                linha.To = Vector2.new(pos.X,pos.Y)
-                linha.Visible = true
-            else
-                linha.Visible = false
-            end
-        end
-    else
-        for _,linha in pairs(LinhasESP) do linha.Visible=false end
-    end
-    if Funcoes["Puxar Inimigos"] then PuxarInimigos(15) end
-    if Funcoes["God Mode"] then AtivarGodMode() end
-    if Funcoes["Wall Hack"] then AtivarWallHack() end
-    if Funcoes["Super Velocidade"] then AtivarSuperVelocidade() end
-    if Funcoes["Super Pulo"] then AtivarSuperPulo() end
 end)
