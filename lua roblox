@@ -1,369 +1,220 @@
--- Léo Hub Ultimate+RapidFire - Mod Menu Profissional Delta Executor
--- Autor: Léo
-
-local player = game.Players.LocalPlayer
+-- Léo Hub Ultimate v2 - Mod Menu Final para Roblox Delta
+-- Serviços
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local camera = workspace.CurrentCamera
-local mouse = player:GetMouse()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 
--- ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LeoHub"
-ScreenGui.Parent = game.CoreGui
+-- Menu Config
+local MenuEnabled = false
+local MenuPosition = Vector2.new(100, 100)
+local MenuSize = Vector2.new(250, 350)
 
--- Menu Frame
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 300, 0, 600)
-Frame.Position = UDim2.new(0.5, -150, 0.5, -300)
-Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
-Frame.Parent = ScreenGui
+-- Funções do menu
+local Functions = {
+    Aimbot = false,
+    ESP = false,
+    Crosshair = true
+}
+local AimbotFOV = 50
 
--- Bolinha para reabrir menu
-local ReopenButton = Instance.new("TextButton")
-ReopenButton.Size = UDim2.new(0, 50, 0, 50)
-ReopenButton.Position = UDim2.new(0, 10, 1, -60)
-ReopenButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
-ReopenButton.Text = "🔹"
-ReopenButton.TextSize = 30
-ReopenButton.Font = Enum.Font.SourceSansBold
-ReopenButton.TextColor3 = Color3.fromRGB(255,255,255)
-ReopenButton.Parent = ScreenGui
-ReopenButton.Visible = false
+-- Debounce para clique
+local CanClick = true
 
--- Título
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,0,0,40)
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-Title.Text = "✨ Léo Hub Ultimate ✨"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
-Title.Parent = Frame
+-- Menu Box
+local MenuBox = Drawing.new("Square")
+MenuBox.Position = MenuPosition
+MenuBox.Size = MenuSize
+MenuBox.Filled = true
+MenuBox.Color = Color3.fromRGB(25,25,25)
+MenuBox.Transparency = 1
+MenuBox.Visible = MenuEnabled
 
--- Botão fechar menu
-local CloseMenu = Instance.new("TextButton")
-CloseMenu.Size = UDim2.new(0, 40, 0, 40)
-CloseMenu.Position = UDim2.new(1, -45, 0, 5)
-CloseMenu.BackgroundColor3 = Color3.fromRGB(200,50,50)
-CloseMenu.Text = "X"
-CloseMenu.TextColor3 = Color3.fromRGB(255,255,255)
-CloseMenu.Font = Enum.Font.GothamBold
-CloseMenu.TextSize = 20
-CloseMenu.Parent = Frame
+-- Menu Title
+local Title = Drawing.new("Text")
+Title.Text = "Léo Hub Ultimate v2"
+Title.Position = MenuPosition + Vector2.new(10,10)
+Title.Size = 22
+Title.Color = Color3.fromRGB(0,255,255)
+Title.Center = false
+Title.Visible = MenuEnabled
 
-CloseMenu.MouseButton1Click:Connect(function()
-    Frame.Visible = false
-    ReopenButton.Visible = true
-end)
+-- Close Button X
+local Close1 = Drawing.new("Line")
+local Close2 = Drawing.new("Line")
+local CloseOffset = Vector2.new(MenuSize.X - 25, 15)
+Close1.Color = Color3.fromRGB(255,0,0)
+Close2.Color = Color3.fromRGB(255,0,0)
+Close1.Thickness = 2
+Close2.Thickness = 2
+Close1.Visible = MenuEnabled
+Close2.Visible = MenuEnabled
 
-ReopenButton.MouseButton1Click:Connect(function()
-    Frame.Visible = true
-    ReopenButton.Visible = false
-end)
-
--- Função criar botão
-local function createButton(posY, text)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0,10,0,posY)
-    btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 18
-    btn.Parent = Frame
-    return btn
-end
-
--- Botões principais
-local SpeedButton = createButton(60,"Ativar Speed Hack")
-local NoClipButton = createButton(110,"Ativar NoClip")
-local ESPButton = createButton(160,"Ativar ESP")
-local GodButton = createButton(210,"Ativar God Mode")
-local TeleportButton = createButton(260,"Teleportar")
-local FlyButton = createButton(310,"Ativar Voar")
-local AimbotButton = createButton(360,"Ativar Aimbot")
-local RapidFireButton = createButton(410,"Ativar Rapid Fire")
-local CrosshairSizeSlider = createButton(460,"Ajustar Crosshair")
-
--- Variáveis
-local speedEnabled = false
-local noclipEnabled = false
-local espEnabled = false
-local godEnabled = false
-local flying = false
-local flySpeed = 50
-local flyBodyVelocity
-local espHighlights = {}
-local aimbotEnabled = false
-local aimFOV = 100
-local aimSmooth = 0.25
-local crosshairSize = 10
-local mouseDown = false
-local rapidFireEnabled = false
-local rapidFireDelay = 0.05 -- 50ms
-
--- Speed Hack
-SpeedButton.MouseButton1Click:Connect(function()
-    speedEnabled = not speedEnabled
-    if speedEnabled then
-        player.Character.Humanoid.WalkSpeed = 100
-        SpeedButton.Text = "Desativar Speed Hack"
-    else
-        player.Character.Humanoid.WalkSpeed = 16
-        SpeedButton.Text = "Ativar Speed Hack"
-    end
-end)
-
--- NoClip
-NoClipButton.MouseButton1Click:Connect(function()
-    noclipEnabled = not noclipEnabled
-    if noclipEnabled then
-        NoClipButton.Text = "Desativar NoClip"
-    else
-        NoClipButton.Text = "Ativar NoClip"
-    end
-end)
-
-RunService.Stepped:Connect(function()
-    if noclipEnabled and player.Character then
-        for _, part in pairs(player.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-end)
-
--- ESP
-ESPButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    if espEnabled then
-        ESPButton.Text = "Desativar ESP"
-        for _, plr in pairs(game.Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                if not espHighlights[plr] then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Adornee = plr.Character
-                    highlight.FillColor = Color3.fromRGB(0,255,0)
-                    highlight.OutlineColor = Color3.fromRGB(0,255,0)
-                    highlight.Parent = player:WaitForChild("PlayerGui")
-                    espHighlights[plr] = highlight
-                end
-            end
-        end
-    else
-        ESPButton.Text = "Ativar ESP"
-        for _, hl in pairs(espHighlights) do
-            if hl then hl:Destroy() end
-        end
-        espHighlights = {}
-    end
-end)
-
--- God Mode
-GodButton.MouseButton1Click:Connect(function()
-    godEnabled = not godEnabled
-    if godEnabled then
-        GodButton.Text = "Desativar God Mode"
-        if player.Character then
-            player.Character.Humanoid.MaxHealth = math.huge
-            player.Character.Humanoid.Health = math.huge
-        end
-    else
-        GodButton.Text = "Ativar God Mode"
-        if player.Character then
-            player.Character.Humanoid.MaxHealth = 100
-            player.Character.Humanoid.Health = 100
-        end
-    end
-end)
-
--- Teleport Frame
-local TPFrame = Instance.new("Frame")
-TPFrame.Size = UDim2.new(0,200,0,240)
-TPFrame.Position = UDim2.new(0.5, 150, 0.5, -120)
-TPFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
-TPFrame.Visible = false
-TPFrame.Parent = ScreenGui
-
-local TPClose = Instance.new("TextButton")
-TPClose.Size = UDim2.new(0,35,0,35)
-TPClose.Position = UDim2.new(1,-40,0,5)
-TPClose.BackgroundColor3 = Color3.fromRGB(200,50,50)
-TPClose.Text = "X"
-TPClose.TextColor3 = Color3.fromRGB(255,255,255)
-TPClose.Font = Enum.Font.GothamBold
-TPClose.TextSize = 20
-TPClose.Parent = TPFrame
-
-TPClose.MouseButton1Click:Connect(function()
-    TPFrame.Visible = false
-end)
-
-local function refreshTPList()
-    for _, v in pairs(TPFrame:GetChildren()) do
-        if v:IsA("TextButton") and v ~= TPClose then
-            v:Destroy()
-        end
-    end
-    local yPos = 50
-    for _, plr in pairs(game.Players:GetPlayers()) do
-        if plr ~= player then
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1,-10,0,30)
-            btn.Position = UDim2.new(0,5,0,yPos)
-            btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-            btn.Text = plr.Name
-            btn.TextColor3 = Color3.fromRGB(255,255,255)
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 16
-            btn.Parent = TPFrame
-
-            btn.MouseButton1Click:Connect(function()
-                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    player.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame
-                end
-            end)
-            yPos = yPos + 35
-        end
-    end
-end
-
-TeleportButton.MouseButton1Click:Connect(function()
-    refreshTPList()
-    TPFrame.Visible = true
-end)
-
--- Voar
-FlyButton.MouseButton1Click:Connect(function()
-    flying = not flying
-    if flying then
-        FlyButton.Text = "Desativar Voar"
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local root = character.HumanoidRootPart
-            flyBodyVelocity = Instance.new("BodyVelocity")
-            flyBodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
-            flyBodyVelocity.Velocity = Vector3.new(0,0,0)
-            flyBodyVelocity.Parent = root
-
-            RunService.RenderStepped:Connect(function()
-                if flying and root then
-                    local moveDirection = Vector3.new(0,0,0)
-                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                        moveDirection = moveDirection + (camera.CFrame.LookVector * flySpeed)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                        moveDirection = moveDirection - (camera.CFrame.LookVector * flySpeed)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                        moveDirection = moveDirection - (camera.CFrame.RightVector * flySpeed)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                        moveDirection = moveDirection + (camera.CFrame.RightVector * flySpeed)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                        moveDirection = moveDirection + Vector3.new(0, flySpeed, 0)
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-                        moveDirection = moveDirection - Vector3.new(0, flySpeed, 0)
-                    end
-                    flyBodyVelocity.Velocity = moveDirection
-                end
-            end)
-        end
-    else
-        FlyButton.Text = "Ativar Voar"
-        if flyBodyVelocity then
-            flyBodyVelocity:Destroy()
-        end
-    end
-end)
+-- Bolinha para abrir o menu
+local MenuButton = Drawing.new("Circle")
+MenuButton.Position = Vector2.new(50,50)
+MenuButton.Radius = 18
+MenuButton.Filled = true
+MenuButton.Color = Color3.fromRGB(0,255,255)
+MenuButton.Visible = true
 
 -- Crosshair
-local Crosshair = Instance.new("Frame")
-Crosshair.Size = UDim2.new(0,crosshairSize,0,crosshairSize)
-Crosshair.Position = UDim2.new(0.5, -crosshairSize/2, 0.5, -crosshairSize/2)
-Crosshair.BackgroundColor3 = Color3.fromRGB(255,0,0)
-Crosshair.BorderSizePixel = 0
-Crosshair.AnchorPoint = Vector2.new(0.5,0.5)
-Crosshair.Parent = ScreenGui
+local Crosshair = Drawing.new("Circle")
+Crosshair.Color = Color3.fromRGB(0,255,0)
+Crosshair.Radius = 6
+Crosshair.Thickness = 2
+Crosshair.Filled = false
+Crosshair.Visible = true
 
--- Ajuste do Crosshair
-CrosshairSizeSlider.MouseButton1Click:Connect(function()
-    crosshairSize = crosshairSize + 5
-    if crosshairSize > 50 then crosshairSize = 10 end
-    Crosshair.Size = UDim2.new(0,crosshairSize,0,crosshairSize)
-    Crosshair.Position = UDim2.new(0.5, -crosshairSize/2, 0.5, -crosshairSize/2)
-    CrosshairSizeSlider.Text = "Crosshair: "..crosshairSize
-end)
+-- ESP Lines
+local ESPLines = {}
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        local line = Drawing.new("Line")
+        line.Color = Color3.fromRGB(255,0,0)
+        line.Thickness = 2
+        line.Transparency = 1
+        line.Visible = false
+        ESPLines[player] = line
+    end
+end
 
--- Aimbot + Rapid Fire
-mouse.Button1Down:Connect(function()
-    mouseDown = true
-end)
-
-mouse.Button1Up:Connect(function()
-    mouseDown = false
-end)
-
-AimbotButton.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    if aimbotEnabled then
-        AimbotButton.Text = "Desativar Aimbot"
-    else
-        AimbotButton.Text = "Ativar Aimbot"
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        local line = Drawing.new("Line")
+        line.Color = Color3.fromRGB(255,0,0)
+        line.Thickness = 2
+        line.Transparency = 1
+        line.Visible = false
+        ESPLines[player] = line
     end
 end)
 
-RapidFireButton.MouseButton1Click:Connect(function()
-    rapidFireEnabled = not rapidFireEnabled
-    if rapidFireEnabled then
-        RapidFireButton.Text = "Desativar Rapid Fire"
-    else
-        RapidFireButton.Text = "Ativar Rapid Fire"
+Players.PlayerRemoving:Connect(function(player)
+    if ESPLines[player] then
+        ESPLines[player]:Remove()
+        ESPLines[player] = nil
     end
 end)
 
-RunService.RenderStepped:Connect(function()
-    if aimbotEnabled and mouseDown then
-        local closestPlayer
-        local shortestDistance = math.huge
-        for _, plr in pairs(game.Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local screenPos, onScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-                if onScreen then
-                    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-                    if dist < shortestDistance and dist < aimFOV then
-                        closestPlayer = plr
-                        shortestDistance = dist
-                    end
+-- Função para pegar inimigo mais próximo dentro do FOV
+local function getClosestEnemy()
+    local closestPlayer = nil
+    local shortestDistance = AimbotFOV
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(screenPos.X, screenPos.Y)).magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = player
                 end
             end
         end
-        if closestPlayer and closestPlayer.Character then
-            local targetPos = closestPlayer.Character.HumanoidRootPart.Position
-            local currentCFrame = camera.CFrame
-            local newCFrame = CFrame.new(currentCFrame.Position, targetPos)
-            camera.CFrame = currentCFrame:Lerp(newCFrame, aimSmooth)
+    end
+    return closestPlayer
+end
 
-            -- Rapid Fire
-            if rapidFireEnabled then
-                if player.Backpack:FindFirstChildOfClass("Tool") then
-                    local tool = player.Backpack:FindFirstChildOfClass("Tool")
-                    tool:Activate()
-                elseif player.Character:FindFirstChildOfClass("Tool") then
-                    local tool = player.Character:FindFirstChildOfClass("Tool")
-                    tool:Activate()
-                end
+-- Controle de clique
+local mouseDown = false
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        mouseDown = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        mouseDown = false
+    end
+end)
+
+-- Loop principal único
+RunService.RenderStepped:Connect(function()
+    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+
+    -- Atualiza bolinha de abrir menu
+    if mouseDown and CanClick then
+        if (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
+            MenuEnabled = not MenuEnabled
+            MenuBox.Visible = MenuEnabled
+            Title.Visible = MenuEnabled
+            Close1.Visible = MenuEnabled
+            Close2.Visible = MenuEnabled
+            CanClick = false
+            task.delay(0.2, function() CanClick = true end)
+        end
+    end
+
+    -- Atualiza X de fechar
+    Close1.From = MenuPosition + CloseOffset
+    Close1.To = Close1.From + Vector2.new(12,12)
+    Close2.From = Close1.From + Vector2.new(0,12)
+    Close2.To = Close1.From + Vector2.new(12,0)
+
+    if MenuEnabled and mouseDown and CanClick then
+        local centerX = Close1.From + Vector2.new(6,6)
+        if (centerX - mousePos).magnitude <= 12 then
+            MenuEnabled = false
+            MenuBox.Visible = false
+            Title.Visible = false
+            Close1.Visible = false
+            Close2.Visible = false
+            CanClick = false
+            task.delay(0.2, function() CanClick = true end)
+        end
+    end
+
+    -- Atualiza crosshair
+    if Functions.Crosshair then
+        Crosshair.Position = Vector2.new(Mouse.X, Mouse.Y)
+        Crosshair.Visible = true
+    else
+        Crosshair.Visible = false
+    end
+
+    -- Aimbot
+    if Functions.Aimbot and mouseDown then
+        local target = getClosestEnemy()
+        if target then
+            local targetPos = target.Character.HumanoidRootPart.Position
+            -- Suavização da mira (opcional)
+            local cf = Camera.CFrame
+            Camera.CFrame = cf:Lerp(CFrame.new(cf.Position, targetPos), 0.3)
+        end
+    end
+
+    -- ESP
+    if Functions.ESP then
+        for player, line in pairs(ESPLines) do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                line.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                line.To = Vector2.new(pos.X, pos.Y)
+                line.Visible = true
+            else
+                line.Visible = false
             end
+        end
+    else
+        for _, line in pairs(ESPLines) do
+            line.Visible = false
+        end
+    end
+
+    -- Toggles dentro do menu
+    if MenuEnabled and mouseDown and CanClick then
+        local startY = 50
+        for name, state in pairs(Functions) do
+            local togglePos = MenuPosition + Vector2.new(20, startY)
+            if (togglePos - mousePos).magnitude <= 50 then
+                Functions[name] = not state
+                CanClick = false
+                task.delay(0.2, function() CanClick = true end)
+            end
+            startY = startY + 30
         end
     end
 end)
