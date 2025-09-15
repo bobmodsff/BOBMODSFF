@@ -1,173 +1,134 @@
--- Léo Hub Ultimate v8 - Delta Executor
--- Baseado no estilo LEO FLORESTA HUB V2, com todas as funções de vantagem
+--// Leo Hub V1
+if game:GetService("CoreGui"):FindFirstChild("LeoHub") then
+    game:GetService("CoreGui").LeoHub:Destroy()
+end
 
+-- Services
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
-local plr = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
--- ======== UTIL ========
-local function HRP() return plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") end
-local function getPrimaryPart(obj)
-    if not obj then return nil end
-    if obj:IsA("BasePart") then return obj end
-    if obj:IsA("Model") then
-        if obj.PrimaryPart then return obj.PrimaryPart end
-        for _,c in pairs(obj:GetChildren()) do if c:IsA("BasePart") then return c end end
-    end
-    return nil
-end
+-- GUI Principal
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LeoHub"
+ScreenGui.Parent = game:GetService("CoreGui")
 
--- ======== FUNCOES DE VANTAGEM ========
-local Funcoes = {
-    Aimbot = false,
-    AimKill = false,
-    ESP = false,
-    PullEnemies = false,
-    GodMode = false,
-    WallHack = false,
-    SuperSpeed = false,
-    SuperJump = false
-}
+-- Janela Principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = true
+MainFrame.Parent = ScreenGui
 
--- Crosshair
-local CoreGui = game:GetService("CoreGui")
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "LEO_HUB_ULTIMATE_V8"
-
-local Crosshair = Instance.new("Frame", ScreenGui)
-Crosshair.Size = UDim2.new(0,2,0,20)
-Crosshair.Position = UDim2.new(0.5,-1,0.5,-10)
-Crosshair.BackgroundColor3 = Color3.new(0,1,0)
-local CrosshairH = Instance.new("Frame", ScreenGui)
-CrosshairH.Size = UDim2.new(0,20,0,2)
-CrosshairH.Position = UDim2.new(0.5,-10,0.5,-1)
-CrosshairH.BackgroundColor3 = Color3.new(0,1,0)
-
--- Bolinha flutuante
-local Ball = Instance.new("TextButton", ScreenGui)
-Ball.Size = UDim2.new(0,50,0,50)
-Ball.Position = UDim2.new(0.05,0,0.5,0)
-Ball.Text = "🛡️"
-Ball.TextSize = 30
-Ball.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Ball.AutoButtonColor = true
-local UIC = Instance.new("UICorner", Ball); UIC.CornerRadius = UDim.new(1,0)
-local Stroke = Instance.new("UIStroke", Ball); Stroke.Thickness = 2; Stroke.Color = Color3.fromHSV(0,1,1)
-task.spawn(function() while task.wait() do Stroke.Color = Color3.fromHSV(tick()%1,1,1) end end)
-
--- Drag bolinha
-do
-    local dragging, dragInput, dragStart, startPos
-    Ball.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = Ball.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging=false end end)
-        end
-    end)
-    Ball.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput=input end end)
-    UIS.InputChanged:Connect(function(input)
-        if input==dragInput and dragging then
-            local delta = input.Position - dragStart
-            Ball.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
--- Menu
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,300,0,400)
-Main.Position = UDim2.new(0.3,0,0.2,0)
-Main.BackgroundColor3 = Color3.fromRGB(18,18,18)
-Main.Visible = false
-local mainCorner = Instance.new("UICorner", Main); mainCorner.CornerRadius = UDim.new(0,12)
-local mainStroke = Instance.new("UIStroke", Main); mainStroke.Thickness = 2; mainStroke.Color = Color3.fromHSV(0,1,1)
-task.spawn(function() while task.wait() do mainStroke.Color = Color3.fromHSV(tick()%1,1,1) end end)
-
--- Drag menu
-do
-    local draggingMenu, dragInputMenu, dragStartMenu, startPosMenu
-    Main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            draggingMenu = true
-            dragStartMenu = input.Position
-            startPosMenu = Main.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then draggingMenu=false end end)
-        end
-    end)
-    Main.InputChanged:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseMovement then dragInputMenu=input end end)
-    UIS.InputChanged:Connect(function(input)
-        if input==dragInputMenu and draggingMenu then
-            local delta = input.Position - dragStartMenu
-            Main.Position = UDim2.new(startPosMenu.X.Scale, startPosMenu.X.Offset+delta.X, startPosMenu.Y.Scale, startPosMenu.Y.Offset+delta.Y)
-        end
-    end)
-end
-
--- Title
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1,-70,0,36)
-Title.Position = UDim2.new(0,16,0,8)
-Title.Text = "🔥 LÉO HUB ULTIMATE V8 🔥"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
-Title.TextColor3 = Color3.fromRGB(255,255,255)
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
+Title.Text = "Leo Hub V1"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
 
-local Close = Instance.new("TextButton", Main)
-Close.Size = UDim2.new(0,36,0,36); Close.Position = UDim2.new(1,-46,0,6)
-Close.Text = "✖"; Close.BackgroundTransparency = 1; Close.Font = Enum.Font.GothamBold; Close.TextColor3 = Color3.fromRGB(255,100,100)
-Close.MouseButton1Click:Connect(function() Main.Visible = false end)
+-- Botão Fechar (X)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.Text = "X"
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Parent = MainFrame
 
--- Scroll area
-local Scroll = Instance.new("ScrollingFrame", Main)
-Scroll.Size = UDim2.new(1,-20,1,-60); Scroll.Position = UDim2.new(0,10,0,48)
-Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 6
-local Layout = Instance.new("UIListLayout", Scroll); Layout.Padding = UDim.new(0,6)
+-- Botão Reabrir (bolinha)
+local ReopenButton = Instance.new("TextButton")
+ReopenButton.Size = UDim2.new(0, 40, 0, 40)
+ReopenButton.Position = UDim2.new(0, 20, 1, -60)
+ReopenButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+ReopenButton.Text = "◉"
+ReopenButton.Font = Enum.Font.GothamBold
+ReopenButton.TextSize = 18
+ReopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReopenButton.Visible = false
+ReopenButton.Parent = ScreenGui
 
--- Botões e toggles
-local function createButton(txt)
-    local b = Instance.new("TextButton", Scroll)
-    b.Size = UDim2.new(1,-12,0,34)
-    b.BackgroundColor3 = Color3.fromRGB(36,36,36)
-    b.Text = txt
-    b.Font = Enum.Font.GothamSemibold
-    b.TextSize = 14
-    b.TextColor3 = Color3.fromRGB(255,255,255)
-    b.AutoButtonColor = true
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-    return b
-end
-
-local function makeToggleButton(label, stateHolder, key, onEnable, onDisable)
-    local btn = createButton(label .. " [OFF]")
-    btn.MouseButton1Click:Connect(function()
-        stateHolder[key] = not stateHolder[key]
-        local st = stateHolder[key]
-        btn.Text = label .. " [" .. (st and "ON" or "OFF") .. "]"
-        if st then pcall(onEnable) else pcall(onDisable) end
-    end)
-    return btn
-end
-
--- Exemplo de funções ativas
-makeToggleButton("Aimbot", Funcoes, "Aimbot", function() end, function() end)
-makeToggleButton("Aim Kill", Funcoes, "AimKill", function() end, function() end)
-makeToggleButton("ESP", Funcoes, "ESP", function() end, function() end)
-makeToggleButton("God Mode", Funcoes, "GodMode", function() end, function() end)
-makeToggleButton("Wall Hack", Funcoes, "WallHack", function() end, function() end)
-makeToggleButton("Super Velocidade", Funcoes, "SuperSpeed", function() end, function() end)
-makeToggleButton("Super Pulo", Funcoes, "SuperJump", function() end, function() end)
-makeToggleButton("Puxar Inimigos", Funcoes, "PullEnemies", function() end, function() end)
-
--- Abrir menu com bolinha
-Ball.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
--- Abrir menu com Insert
-UIS.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Insert then
-        Main.Visible = not Main.Visible
-    end
+-- Funções de abrir/fechar
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    ReopenButton.Visible = true
 end)
+
+ReopenButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    ReopenButton.Visible = false
+end)
+
+-- Scroll para os botões
+local ButtonFrame = Instance.new("ScrollingFrame")
+ButtonFrame.Size = UDim2.new(1, -20, 1, -60)
+ButtonFrame.Position = UDim2.new(0, 10, 0, 50)
+ButtonFrame.BackgroundTransparency = 1
+ButtonFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ButtonFrame.ScrollBarThickness = 4
+ButtonFrame.Parent = MainFrame
+
+-- Layout para organizar os botões
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.FillDirection = Enum.FillDirection.Vertical
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = ButtonFrame
+
+-- Função para criar botões no menu
+local function createButton(name, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0.9, 0, 0, 40)
+    Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Btn.Text = name
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 16
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Parent = ButtonFrame
+
+    Btn.MouseButton1Click:Connect(callback)
+
+    -- Animação hover
+    Btn.MouseEnter:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+    end)
+    Btn.MouseLeave:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+    end)
+end
+
+-- ===========================
+-- Função: puxar inimigos
+-- ===========================
+local function puxarInimigos()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    -- Tente mudar esse nome de pasta dependendo do jogo
+    local pastaInimigos = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace:FindFirstChild("NPCs")
+
+    if pastaInimigos then
+        for _, inimigo in pairs(pastaInimigos:GetChildren()) do
+            local hrpInimigo = inimigo:FindFirstChild("HumanoidRootPart")
+            if hrpInimigo then
+                hrpInimigo.CFrame = hrp.CFrame + Vector3.new(math.random(-5,5), 0, math.random(-5,5))
+            end
+        end
+        print("✅ Inimigos puxados com sucesso!")
+    else
+        warn("⚠️ Não achei a pasta de inimigos (troque 'Enemies/Mobs/NPCs' pelo nome certo do jogo).")
+    end
+end
+
+-- Criar botão no menu
+createButton("Puxar Inimigos", puxarInimigos)
