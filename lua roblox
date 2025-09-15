@@ -1,4 +1,4 @@
--- Léo Hub Ultimate v5 PT-BR - Mod Menu Roblox Delta
+-- Léo Hub Ultimate v6 PT-BR - Mod Menu Profissional Roblox
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9,24 +9,24 @@ local Workspace = game:GetService("Workspace")
 -- Configurações do Menu
 local MenuHabilitado = false
 local MenuPosicao = Vector2.new(100, 100)
-local MenuTamanho = Vector2.new(270, 400)
+local MenuTamanho = Vector2.new(300, 450)
 local PodeClicar = true
 local mouseDown = false
 
--- Funções
+-- Funções e estados
 local Funcoes = {
-    Aimbot = false,
-    ESP = false,
-    PuxarInimigos = false,
-    Mira = true,
-    GodMode = false,
-    WallHack = false,
-    SuperVelocidade = false, -- Nova função de vantagem
-    SuperPulo = false        -- Nova função de vantagem
+    ["Aimbot"] = false,
+    ["Aim Kill"] = false,
+    ["ESP"] = false,
+    ["Puxar Inimigos"] = false,
+    ["God Mode"] = false,
+    ["Wall Hack"] = false,
+    ["Super Velocidade"] = false,
+    ["Super Pulo"] = false
 }
 local FOVAimbot = 50
 
--- Criação do menu
+-- Criação do Menu
 local function CriarMenu()
     local CaixaMenu = Drawing.new("Square")
     CaixaMenu.Position = MenuPosicao
@@ -37,7 +37,7 @@ local function CriarMenu()
     CaixaMenu.Visible = MenuHabilitado
 
     local Titulo = Drawing.new("Text")
-    Titulo.Text = "Léo Hub Ultimate v5"
+    Titulo.Text = "Léo Hub Ultimate v6"
     Titulo.Position = MenuPosicao + Vector2.new(10,10)
     Titulo.Size = 22
     Titulo.Color = Color3.fromRGB(0,255,255)
@@ -69,9 +69,9 @@ BotaoMenu.Visible = true
 local Mira = Drawing.new("Line")
 Mira.Color = Color3.fromRGB(0,255,0)
 Mira.Thickness = 2
-Mira.Visible = Funcoes.Mira
+Mira.Visible = true
 
--- Linhas ESP
+-- ESP
 local LinhasESP = {}
 for _,player in pairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
@@ -82,7 +82,6 @@ for _,player in pairs(Players:GetPlayers()) do
         LinhasESP[player] = linha
     end
 end
-
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         local linha = Drawing.new("Line")
@@ -150,31 +149,36 @@ end
 local function AtivarSuperVelocidade()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = 150 -- Velocidade muito alta
+        char.Humanoid.WalkSpeed = 150
     end
 end
 
 local function AtivarSuperPulo()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.JumpPower = 150 -- Pulo muito alto
+        char.Humanoid.JumpPower = 150
+    end
+end
+
+local function AtivarAimKill()
+    local alvo = InimigoMaisProximo()
+    if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+        alvo.Character.Humanoid.Health = 0
     end
 end
 
 -- Abrir menu com INSERT
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == Enum.KeyCode.Insert then
-            MenuHabilitado = not MenuHabilitado
-            menu.CaixaMenu.Visible = MenuHabilitado
-            menu.Titulo.Visible = MenuHabilitado
-            menu.Fechar1.Visible = MenuHabilitado
-            menu.Fechar2.Visible = MenuHabilitado
-        end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Insert then
+        MenuHabilitado = not MenuHabilitado
+        menu.CaixaMenu.Visible = MenuHabilitado
+        menu.Titulo.Visible = MenuHabilitado
+        menu.Fechar1.Visible = MenuHabilitado
+        menu.Fechar2.Visible = MenuHabilitado
     end
 end)
 
--- Clicar na bolinha para abrir menu
+-- Abrir menu clicando na bolinha
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
@@ -193,6 +197,7 @@ end)
 -- Loop principal
 RunService.RenderStepped:Connect(function()
     local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    mouseDown = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
 
     -- Fechar menu X
     menu.Fechar1.From = MenuPosicao + menu.FecharOffset
@@ -212,31 +217,24 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Crosshair fixo
-    if Funcoes.Mira then
-        Mira.Visible = true
-        local cx,cy = Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2
-        Mira.From = Vector2.new(cx-6,cy)
-        Mira.To = Vector2.new(cx+6,cy)
-    else
-        Mira.Visible = false
-    end
+    -- Crosshair
+    local cx,cy = Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2
+    Mira.From = Vector2.new(cx-6,cy)
+    Mira.To = Vector2.new(cx+6,cy)
 
-    -- Aimbot
+    -- Executar funções
     if Funcoes.Aimbot and mouseDown then
         local alvo = InimigoMaisProximo()
         if alvo then
-            local posAlvo = alvo.Character.HumanoidRootPart.Position
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position,posAlvo),0.3)
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, alvo.Character.HumanoidRootPart.Position), 0.3)
         end
     end
-
-    -- ESP
+    if Funcoes["Aim Kill"] then AtivarAimKill() end
     if Funcoes.ESP then
         for player,linha in pairs(LinhasESP) do
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local pos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-                linha.From = Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y)
+                linha.From = Vector2.new(cx,Camera.ViewportSize.Y)
                 linha.To = Vector2.new(pos.X,pos.Y)
                 linha.Visible = true
             else
@@ -246,33 +244,9 @@ RunService.RenderStepped:Connect(function()
     else
         for _,linha in pairs(LinhasESP) do linha.Visible=false end
     end
-
-    -- Puxar inimigos
-    if Funcoes.PuxarInimigos then PuxarInimigos(15) end
-
-    -- God Mode
-    if Funcoes.GodMode then AtivarGodMode() end
-
-    -- Wall Hack
-    if Funcoes.WallHack then AtivarWallHack() end
-
-    -- Super Velocidade
-    if Funcoes.SuperVelocidade then AtivarSuperVelocidade() end
-
-    -- Super Pulo
-    if Funcoes.SuperPulo then AtivarSuperPulo() end
-
-    -- Toggles do Menu
-    if MenuHabilitado and mouseDown and PodeClicar then
-        local startY = 50
-        for nome,estado in pairs(Funcoes) do
-            local togglePos = MenuPosicao + Vector2.new(20,startY)
-            if (togglePos - mousePos).magnitude <= 50 then
-                Funcoes[nome] = not estado
-                PodeClicar = false
-                task.delay(0.2,function() PodeClicar = true end)
-            end
-            startY = startY + 30
-        end
-    end
+    if Funcoes["Puxar Inimigos"] then PuxarInimigos(15) end
+    if Funcoes["God Mode"] then AtivarGodMode() end
+    if Funcoes["Wall Hack"] then AtivarWallHack() end
+    if Funcoes["Super Velocidade"] then AtivarSuperVelocidade() end
+    if Funcoes["Super Pulo"] then AtivarSuperPulo() end
 end)
