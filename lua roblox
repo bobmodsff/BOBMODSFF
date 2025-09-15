@@ -1,5 +1,4 @@
--- Léo Hub Ultimate v5 - Mod Menu completo para Roblox Delta
--- Serviços
+-- Léo Hub Ultimate v5 FIX - Mod Menu Roblox Delta
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -25,7 +24,7 @@ local Functions = {
 }
 local AimbotFOV = 50
 
--- Drawing Menu
+-- Criação do menu
 local function CreateMenu()
     local MenuBox = Drawing.new("Square")
     MenuBox.Position = MenuPosition
@@ -56,7 +55,7 @@ local function CreateMenu()
 end
 local menu = CreateMenu()
 
--- Bolinha Flutuante Arrastável
+-- Bolinha flutuante arrastável
 local MenuButton = Drawing.new("Circle")
 MenuButton.Position = Vector2.new(50,50)
 MenuButton.Radius = 18
@@ -100,7 +99,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Funções
+-- Funções auxiliares
 local function getClosestEnemy()
     local closestPlayer = nil
     local shortestDistance = AimbotFOV
@@ -131,7 +130,6 @@ local function PullEnemiesInFront(distance)
     end
 end
 
--- God Mode
 local function EnableGodMode()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -140,7 +138,6 @@ local function EnableGodMode()
     end
 end
 
--- Wall Hack
 local function EnableWallHack()
     for _, part in pairs(Workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.CanCollide == true then
@@ -154,7 +151,6 @@ end
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         mouseDown = true
-        -- Arrastar bolinha
         local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
         if (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
             dragging = true
@@ -178,7 +174,7 @@ RunService.RenderStepped:Connect(function()
         MenuButton.Position = mousePos + dragOffset
     end
 
-    -- Abrir/Fechar menu
+    -- Abrir menu somente se NÃO estiver arrastando
     if mouseDown and CanClick and (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius and not dragging then
         MenuEnabled = not MenuEnabled
         menu.MenuBox.Visible = MenuEnabled
@@ -189,7 +185,7 @@ RunService.RenderStepped:Connect(function()
         task.delay(0.2,function() CanClick = true end)
     end
 
-    -- X fechar
+    -- Fechar menu X
     menu.Close1.From = MenuPosition + menu.CloseOffset
     menu.Close1.To = menu.Close1.From + Vector2.new(12,12)
     menu.Close2.From = menu.Close1.From + Vector2.new(0,12)
@@ -207,7 +203,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Crosshair no centro
+    -- Crosshair fixo
     if Functions.Crosshair then
         Crosshair.Visible = true
         local cx,cy = Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2
