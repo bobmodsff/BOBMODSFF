@@ -1,82 +1,84 @@
--- Léo Hub Ultimate v3 - Mod Menu Final para Roblox Delta
+-- Léo Hub Ultimate v5 - Mod Menu completo para Roblox Delta
 -- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
-local Mouse = LocalPlayer:GetMouse()
+local Workspace = game:GetService("Workspace")
 
 -- Menu Config
 local MenuEnabled = false
-local MenuPosition = Vector2.new(100,100)
-local MenuSize = Vector2.new(270,380)
+local MenuPosition = Vector2.new(100, 100)
+local MenuSize = Vector2.new(270, 400)
+local CanClick = true
+local mouseDown = false
 
--- Funções do menu
+-- Funções
 local Functions = {
     Aimbot = false,
     ESP = false,
+    PullEnemies = false,
     Crosshair = true,
-    PullEnemies = false
+    GodMode = false,
+    WallHack = false
 }
 local AimbotFOV = 50
 
--- Debounce de clique
-local CanClick = true
+-- Drawing Menu
+local function CreateMenu()
+    local MenuBox = Drawing.new("Square")
+    MenuBox.Position = MenuPosition
+    MenuBox.Size = MenuSize
+    MenuBox.Filled = true
+    MenuBox.Color = Color3.fromRGB(25,25,25)
+    MenuBox.Transparency = 1
+    MenuBox.Visible = MenuEnabled
 
--- Menu Box
-local MenuBox = Drawing.new("Square")
-MenuBox.Position = MenuPosition
-MenuBox.Size = MenuSize
-MenuBox.Filled = true
-MenuBox.Color = Color3.fromRGB(25,25,25)
-MenuBox.Transparency = 1
-MenuBox.Visible = MenuEnabled
+    local Title = Drawing.new("Text")
+    Title.Text = "Léo Hub Ultimate v5"
+    Title.Position = MenuPosition + Vector2.new(10,10)
+    Title.Size = 22
+    Title.Color = Color3.fromRGB(0,255,255)
+    Title.Visible = MenuEnabled
 
--- Menu Title
-local Title = Drawing.new("Text")
-Title.Text = "Léo Hub Ultimate v3"
-Title.Position = MenuPosition + Vector2.new(10,10)
-Title.Size = 22
-Title.Color = Color3.fromRGB(0,255,255)
-Title.Center = false
-Title.Visible = MenuEnabled
+    local Close1 = Drawing.new("Line")
+    local Close2 = Drawing.new("Line")
+    local CloseOffset = Vector2.new(MenuSize.X-25,15)
+    Close1.Color = Color3.fromRGB(255,0,0)
+    Close2.Color = Color3.fromRGB(255,0,0)
+    Close1.Thickness = 2
+    Close2.Thickness = 2
+    Close1.Visible = MenuEnabled
+    Close2.Visible = MenuEnabled
 
--- Close Button X
-local Close1 = Drawing.new("Line")
-local Close2 = Drawing.new("Line")
-local CloseOffset = Vector2.new(MenuSize.X-25,15)
-Close1.Color = Color3.fromRGB(255,0,0)
-Close2.Color = Color3.fromRGB(255,0,0)
-Close1.Thickness = 2
-Close2.Thickness = 2
-Close1.Visible = MenuEnabled
-Close2.Visible = MenuEnabled
+    return {MenuBox=MenuBox, Title=Title, Close1=Close1, Close2=Close2, CloseOffset=CloseOffset}
+end
+local menu = CreateMenu()
 
--- Bolinha para abrir o menu
+-- Bolinha Flutuante Arrastável
 local MenuButton = Drawing.new("Circle")
 MenuButton.Position = Vector2.new(50,50)
 MenuButton.Radius = 18
 MenuButton.Filled = true
 MenuButton.Color = Color3.fromRGB(0,255,255)
 MenuButton.Visible = true
+local dragging = false
+local dragOffset = Vector2.new(0,0)
 
 -- Crosshair
-local Crosshair = Drawing.new("Circle")
+local Crosshair = Drawing.new("Line")
 Crosshair.Color = Color3.fromRGB(0,255,0)
-Crosshair.Radius = 6
 Crosshair.Thickness = 2
-Crosshair.Filled = false
-Crosshair.Visible = true
+Crosshair.Visible = Functions.Crosshair
 
 -- ESP Lines
 local ESPLines = {}
-for _, player in pairs(Players:GetPlayers()) do
+for _,player in pairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         local line = Drawing.new("Line")
         line.Color = Color3.fromRGB(255,0,0)
         line.Thickness = 2
-        line.Transparency = 1
         line.Visible = false
         ESPLines[player] = line
     end
@@ -87,12 +89,10 @@ Players.PlayerAdded:Connect(function(player)
         local line = Drawing.new("Line")
         line.Color = Color3.fromRGB(255,0,0)
         line.Thickness = 2
-        line.Transparency = 1
         line.Visible = false
         ESPLines[player] = line
     end
 end)
-
 Players.PlayerRemoving:Connect(function(player)
     if ESPLines[player] then
         ESPLines[player]:Remove()
@@ -100,17 +100,17 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Função para inimigo mais próximo
+-- Funções
 local function getClosestEnemy()
     local closestPlayer = nil
     local shortestDistance = AimbotFOV
-    for _, player in pairs(Players:GetPlayers()) do
+    for _,player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
+            local screenPos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
             if onScreen then
-                local distance = (Vector2.new(Mouse.X,Mouse.Y)-Vector2.new(screenPos.X,screenPos.Y)).magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
+                local dist = (Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y/2)-Vector2.new(screenPos.X,screenPos.Y)).magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
                     closestPlayer = player
                 end
             end
@@ -119,69 +119,103 @@ local function getClosestEnemy()
     return closestPlayer
 end
 
--- Função PullEnemies
 local function PullEnemiesInFront(distance)
     distance = distance or 10
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     local frontPos = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector*distance)
-    for _, player in pairs(Players:GetPlayers()) do
+    for _,player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(frontPos)
         end
     end
 end
 
--- Controle de clique
-local mouseDown = false
+-- God Mode
+local function EnableGodMode()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.MaxHealth = math.huge
+        char.Humanoid.Health = math.huge
+    end
+end
+
+-- Wall Hack
+local function EnableWallHack()
+    for _, part in pairs(Workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.CanCollide == true then
+            part.Transparency = 0.5
+            part.CastShadow = false
+        end
+    end
+end
+
+-- Input
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         mouseDown = true
+        -- Arrastar bolinha
+        local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+        if (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
+            dragging = true
+            dragOffset = MenuButton.Position - mousePos
+        end
     end
 end)
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         mouseDown = false
+        dragging = false
     end
 end)
 
 -- Loop principal
 RunService.RenderStepped:Connect(function()
-    local mousePos = Vector2.new(Mouse.X,Mouse.Y)
+    local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
 
-    -- Bolinha abrir menu
-    if mouseDown and CanClick and (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius then
+    -- Arrastar bolinha
+    if dragging then
+        MenuButton.Position = mousePos + dragOffset
+    end
+
+    -- Abrir/Fechar menu
+    if mouseDown and CanClick and (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius and not dragging then
         MenuEnabled = not MenuEnabled
-        MenuBox.Visible = MenuEnabled
-        Title.Visible = MenuEnabled
-        Close1.Visible = MenuEnabled
-        Close2.Visible = MenuEnabled
+        menu.MenuBox.Visible = MenuEnabled
+        menu.Title.Visible = MenuEnabled
+        menu.Close1.Visible = MenuEnabled
+        menu.Close2.Visible = MenuEnabled
         CanClick = false
         task.delay(0.2,function() CanClick = true end)
     end
 
-    -- X de fechar
-    Close1.From = MenuPosition + CloseOffset
-    Close1.To = Close1.From + Vector2.new(12,12)
-    Close2.From = Close1.From + Vector2.new(0,12)
-    Close2.To = Close1.From + Vector2.new(12,0)
-
+    -- X fechar
+    menu.Close1.From = MenuPosition + menu.CloseOffset
+    menu.Close1.To = menu.Close1.From + Vector2.new(12,12)
+    menu.Close2.From = menu.Close1.From + Vector2.new(0,12)
+    menu.Close2.To = menu.Close1.From + Vector2.new(12,0)
     if MenuEnabled and mouseDown and CanClick then
-        local centerX = Close1.From + Vector2.new(6,6)
+        local centerX = menu.Close1.From + Vector2.new(6,6)
         if (centerX - mousePos).magnitude <= 12 then
             MenuEnabled = false
-            MenuBox.Visible = false
-            Title.Visible = false
-            Close1.Visible = false
-            Close2.Visible = false
+            menu.MenuBox.Visible = false
+            menu.Title.Visible = false
+            menu.Close1.Visible = false
+            menu.Close2.Visible = false
             CanClick = false
             task.delay(0.2,function() CanClick = true end)
         end
     end
 
-    -- Crosshair
-    Crosshair.Visible = Functions.Crosshair
-    Crosshair.Position = Vector2.new(Mouse.X,Mouse.Y)
+    -- Crosshair no centro
+    if Functions.Crosshair then
+        Crosshair.Visible = true
+        local cx,cy = Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2
+        Crosshair.From = Vector2.new(cx-6,cy)
+        Crosshair.To = Vector2.new(cx+6,cy)
+    else
+        Crosshair.Visible = false
+    end
 
     -- Aimbot
     if Functions.Aimbot and mouseDown then
@@ -209,11 +243,15 @@ RunService.RenderStepped:Connect(function()
     end
 
     -- PullEnemies
-    if Functions.PullEnemies then
-        PullEnemiesInFront(15)
-    end
+    if Functions.PullEnemies then PullEnemiesInFront(15) end
 
-    -- Toggles no menu
+    -- God Mode
+    if Functions.GodMode then EnableGodMode() end
+
+    -- Wall Hack
+    if Functions.WallHack then EnableWallHack() end
+
+    -- Toggles Menu
     if MenuEnabled and mouseDown and CanClick then
         local startY = 50
         for name,state in pairs(Functions) do
