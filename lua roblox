@@ -147,7 +147,20 @@ local function EnableWallHack()
     end
 end
 
--- Input
+-- Abrir menu com INSERT
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.Insert then
+            MenuEnabled = not MenuEnabled
+            menu.MenuBox.Visible = MenuEnabled
+            menu.Title.Visible = MenuEnabled
+            menu.Close1.Visible = MenuEnabled
+            menu.Close2.Visible = MenuEnabled
+        end
+    end
+end)
+
+-- Input para arrastar bolinha
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         mouseDown = true
@@ -172,17 +185,6 @@ RunService.RenderStepped:Connect(function()
     -- Arrastar bolinha
     if dragging then
         MenuButton.Position = mousePos + dragOffset
-    end
-
-    -- Abrir menu somente se NÃO estiver arrastando
-    if mouseDown and CanClick and (MenuButton.Position - mousePos).magnitude <= MenuButton.Radius and not dragging then
-        MenuEnabled = not MenuEnabled
-        menu.MenuBox.Visible = MenuEnabled
-        menu.Title.Visible = MenuEnabled
-        menu.Close1.Visible = MenuEnabled
-        menu.Close2.Visible = MenuEnabled
-        CanClick = false
-        task.delay(0.2,function() CanClick = true end)
     end
 
     -- Fechar menu X
