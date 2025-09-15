@@ -1,4 +1,5 @@
--- Léo Hub Ultimate v6 PT-BR - Mod Menu Profissional Roblox
+-- Léo Hub Ultimate v7 PT-BR - Mod Menu Delta Executor
+-- Configuração Inicial
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -6,10 +7,10 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local Workspace = game:GetService("Workspace")
 
--- Configurações do Menu
+-- Menu
 local MenuHabilitado = false
-local MenuPosicao = Vector2.new(100, 100)
-local MenuTamanho = Vector2.new(300, 450)
+local MenuPosicao = Vector2.new(100,100)
+local MenuTamanho = Vector2.new(300,450)
 local PodeClicar = true
 local mouseDown = false
 
@@ -26,44 +27,48 @@ local Funcoes = {
 }
 local FOVAimbot = 50
 
--- Criação do Menu
-local function CriarMenu()
-    local CaixaMenu = Drawing.new("Square")
-    CaixaMenu.Position = MenuPosicao
-    CaixaMenu.Size = MenuTamanho
-    CaixaMenu.Filled = true
-    CaixaMenu.Color = Color3.fromRGB(25,25,25)
-    CaixaMenu.Transparency = 1
-    CaixaMenu.Visible = MenuHabilitado
-
-    local Titulo = Drawing.new("Text")
-    Titulo.Text = "Léo Hub Ultimate v6"
-    Titulo.Position = MenuPosicao + Vector2.new(10,10)
-    Titulo.Size = 22
-    Titulo.Color = Color3.fromRGB(0,255,255)
-    Titulo.Visible = MenuHabilitado
-
-    local Fechar1 = Drawing.new("Line")
-    local Fechar2 = Drawing.new("Line")
-    local FecharOffset = Vector2.new(MenuTamanho.X-25,15)
-    Fechar1.Color = Color3.fromRGB(255,0,0)
-    Fechar2.Color = Color3.fromRGB(255,0,0)
-    Fechar1.Thickness = 2
-    Fechar2.Thickness = 2
-    Fechar1.Visible = MenuHabilitado
-    Fechar2.Visible = MenuHabilitado
-
-    return {CaixaMenu=CaixaMenu, Titulo=Titulo, Fechar1=Fechar1, Fechar2=Fechar2, FecharOffset=FecharOffset}
-end
-local menu = CriarMenu()
-
--- Bolinha flutuante fixa
+-- Bolinha flutuante com emoji
 local BotaoMenu = Drawing.new("Circle")
 BotaoMenu.Position = Vector2.new(50,50)
-BotaoMenu.Radius = 18
+BotaoMenu.Radius = 22
 BotaoMenu.Filled = true
 BotaoMenu.Color = Color3.fromRGB(0,255,255)
 BotaoMenu.Visible = true
+
+local Emoji = Drawing.new("Text")
+Emoji.Text = "🛡️"
+Emoji.Position = BotaoMenu.Position - Vector2.new(12,12)
+Emoji.Size = 22
+Emoji.Color = Color3.fromRGB(255,255,255)
+Emoji.Visible = true
+
+-- Menu Box
+local CaixaMenu = Drawing.new("Square")
+CaixaMenu.Position = MenuPosicao
+CaixaMenu.Size = MenuTamanho
+CaixaMenu.Filled = true
+CaixaMenu.Color = Color3.fromRGB(20,20,20)
+CaixaMenu.Transparency = 1
+CaixaMenu.Visible = MenuHabilitado
+
+-- Titulo
+local Titulo = Drawing.new("Text")
+Titulo.Text = "Léo Hub Ultimate v7"
+Titulo.Position = MenuPosicao + Vector2.new(10,10)
+Titulo.Size = 22
+Titulo.Color = Color3.fromRGB(0,255,255)
+Titulo.Visible = MenuHabilitado
+
+-- Fechar X
+local Fechar1 = Drawing.new("Line")
+local Fechar2 = Drawing.new("Line")
+local FecharOffset = Vector2.new(MenuTamanho.X-25,15)
+Fechar1.Color = Color3.fromRGB(255,0,0)
+Fechar2.Color = Color3.fromRGB(255,0,0)
+Fechar1.Thickness = 2
+Fechar2.Thickness = 2
+Fechar1.Visible = MenuHabilitado
+Fechar2.Visible = MenuHabilitado
 
 -- Crosshair
 local Mira = Drawing.new("Line")
@@ -82,6 +87,7 @@ for _,player in pairs(Players:GetPlayers()) do
         LinhasESP[player] = linha
     end
 end
+
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         local linha = Drawing.new("Line")
@@ -98,7 +104,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Funções auxiliares
+-- Funções Auxiliares
 local function InimigoMaisProximo()
     local maisProximo = nil
     local menorDistancia = FOVAimbot
@@ -167,14 +173,14 @@ local function AtivarAimKill()
     end
 end
 
--- Abrir menu com INSERT
+-- Abrir menu com Insert
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Insert then
         MenuHabilitado = not MenuHabilitado
-        menu.CaixaMenu.Visible = MenuHabilitado
-        menu.Titulo.Visible = MenuHabilitado
-        menu.Fechar1.Visible = MenuHabilitado
-        menu.Fechar2.Visible = MenuHabilitado
+        CaixaMenu.Visible = MenuHabilitado
+        Titulo.Visible = MenuHabilitado
+        Fechar1.Visible = MenuHabilitado
+        Fechar2.Visible = MenuHabilitado
     end
 end)
 
@@ -184,10 +190,10 @@ UserInputService.InputBegan:Connect(function(input)
         local mousePos = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
         if (BotaoMenu.Position - mousePos).magnitude <= BotaoMenu.Radius and PodeClicar then
             MenuHabilitado = not MenuHabilitado
-            menu.CaixaMenu.Visible = MenuHabilitado
-            menu.Titulo.Visible = MenuHabilitado
-            menu.Fechar1.Visible = MenuHabilitado
-            menu.Fechar2.Visible = MenuHabilitado
+            CaixaMenu.Visible = MenuHabilitado
+            Titulo.Visible = MenuHabilitado
+            Fechar1.Visible = MenuHabilitado
+            Fechar2.Visible = MenuHabilitado
             PodeClicar = false
             task.delay(0.2,function() PodeClicar = true end)
         end
@@ -200,18 +206,18 @@ RunService.RenderStepped:Connect(function()
     mouseDown = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
 
     -- Fechar menu X
-    menu.Fechar1.From = MenuPosicao + menu.FecharOffset
-    menu.Fechar1.To = menu.Fechar1.From + Vector2.new(12,12)
-    menu.Fechar2.From = menu.Fechar1.From + Vector2.new(0,12)
-    menu.Fechar2.To = menu.Fechar1.From + Vector2.new(12,0)
+    Fechar1.From = MenuPosicao + FecharOffset
+    Fechar1.To = Fechar1.From + Vector2.new(12,12)
+    Fechar2.From = Fechar1.From + Vector2.new(0,12)
+    Fechar2.To = Fechar1.From + Vector2.new(12,0)
     if MenuHabilitado and mouseDown and PodeClicar then
-        local centroX = menu.Fechar1.From + Vector2.new(6,6)
+        local centroX = Fechar1.From + Vector2.new(6,6)
         if (centroX - mousePos).magnitude <= 12 then
             MenuHabilitado = false
-            menu.CaixaMenu.Visible = false
-            menu.Titulo.Visible = false
-            menu.Fechar1.Visible = false
-            menu.Fechar2.Visible = false
+            CaixaMenu.Visible = false
+            Titulo.Visible = false
+            Fechar1.Visible = false
+            Fechar2.Visible = false
             PodeClicar = false
             task.delay(0.2,function() PodeClicar = true end)
         end
