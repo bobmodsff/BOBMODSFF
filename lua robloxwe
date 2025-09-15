@@ -1,134 +1,173 @@
---// Leo Hub V1
-if game:GetService("CoreGui"):FindFirstChild("LeoHub") then
-    game:GetService("CoreGui").LeoHub:Destroy()
+-- Leo V1 Hub - Profissional com Puxar Inimigos, Imortalidade e Excluir Menu
+-- COLOQUE EM UM LOCALSCRIPT DENTRO DE StarterPlayerScripts OU GUI
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove duplicados
+if playerGui:FindFirstChild("LeoV1HubGui") then
+    playerGui.LeoV1HubGui:Destroy()
 end
 
--- Services
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LeoV1HubGui"
+screenGui.Parent = playerGui
 
--- GUI Principal
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LeoHub"
-ScreenGui.Parent = game:GetService("CoreGui")
+-- MAIN FRAME
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0,12)
 
--- Janela Principal
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.Visible = true
-MainFrame.Parent = ScreenGui
+-- HEADER
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 40)
+header.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+header.Parent = mainFrame
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,12)
 
--- Título
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -40, 0, 40)
-Title.Position = UDim2.new(0, 10, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "Leo Hub V1"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = MainFrame
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -40, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Leo V1 Hub"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
 
--- Botão Fechar (X)
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 5)
-CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseButton.Text = "X"
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 16
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.Parent = MainFrame
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -34, 0.5, -14)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 16
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Parent = header
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
--- Botão Reabrir (bolinha)
-local ReopenButton = Instance.new("TextButton")
-ReopenButton.Size = UDim2.new(0, 40, 0, 40)
-ReopenButton.Position = UDim2.new(0, 20, 1, -60)
-ReopenButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-ReopenButton.Text = "◉"
-ReopenButton.Font = Enum.Font.GothamBold
-ReopenButton.TextSize = 18
-ReopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ReopenButton.Visible = false
-ReopenButton.Parent = ScreenGui
+-- REOPEN BUTTON
+local reopenBtn = Instance.new("TextButton")
+reopenBtn.Size = UDim2.new(0,48,0,48)
+reopenBtn.Position = UDim2.new(0,12,1,-60)
+reopenBtn.BackgroundColor3 = Color3.fromRGB(80,80,180)
+reopenBtn.Text = "L"
+reopenBtn.Font = Enum.Font.GothamBold
+reopenBtn.TextSize = 20
+reopenBtn.TextColor3 = Color3.fromRGB(255,255,255)
+reopenBtn.Parent = screenGui
+Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(1,0)
+reopenBtn.Visible = false
 
--- Funções de abrir/fechar
-CloseButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    ReopenButton.Visible = true
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    reopenBtn.Visible = true
 end)
 
-ReopenButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    ReopenButton.Visible = false
+reopenBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    reopenBtn.Visible = false
 end)
 
--- Scroll para os botões
-local ButtonFrame = Instance.new("ScrollingFrame")
-ButtonFrame.Size = UDim2.new(1, -20, 1, -60)
-ButtonFrame.Position = UDim2.new(0, 10, 0, 50)
-ButtonFrame.BackgroundTransparency = 1
-ButtonFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ButtonFrame.ScrollBarThickness = 4
-ButtonFrame.Parent = MainFrame
+-- BUTTON FRAME
+local buttonFrame = Instance.new("Frame")
+buttonFrame.Size = UDim2.new(1,0,1,-40)
+buttonFrame.Position = UDim2.new(0,0,0,40)
+buttonFrame.BackgroundTransparency = 1
+buttonFrame.Parent = mainFrame
 
--- Layout para organizar os botões
 local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.Padding = UDim.new(0,8)
 UIListLayout.FillDirection = Enum.FillDirection.Vertical
 UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = ButtonFrame
+UIListLayout.Parent = buttonFrame
 
--- Função para criar botões no menu
-local function createButton(name, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0.9, 0, 0, 40)
-    Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    Btn.Text = name
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 16
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.Parent = ButtonFrame
+-- FUNÇÃO PARA CRIAR BOTÕES
+local function createButton(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9,0,0,36)
+    btn.BackgroundColor3 = Color3.fromRGB(60,60,70)
+    btn.Text = text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Parent = buttonFrame
 
-    Btn.MouseButton1Click:Connect(callback)
+    btn.MouseButton1Click:Connect(callback)
 
-    -- Animação hover
-    Btn.MouseEnter:Connect(function()
-        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+    -- Hover
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(90,90,100)
     end)
-    Btn.MouseLeave:Connect(function()
-        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(60,60,70)
     end)
 end
 
--- ===========================
--- Função: puxar inimigos
--- ===========================
+-- FUNÇÃO: PUXAR INIMIGOS
 local function puxarInimigos()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    -- Tente mudar esse nome de pasta dependendo do jogo
     local pastaInimigos = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace:FindFirstChild("NPCs")
-
     if pastaInimigos then
         for _, inimigo in pairs(pastaInimigos:GetChildren()) do
             local hrpInimigo = inimigo:FindFirstChild("HumanoidRootPart")
             if hrpInimigo then
-                hrpInimigo.CFrame = hrp.CFrame + Vector3.new(math.random(-5,5), 0, math.random(-5,5))
+                hrpInimigo.CFrame = hrp.CFrame + Vector3.new(math.random(-5,5),0,math.random(-5,5))
             end
         end
         print("✅ Inimigos puxados com sucesso!")
     else
-        warn("⚠️ Não achei a pasta de inimigos (troque 'Enemies/Mobs/NPCs' pelo nome certo do jogo).")
+        warn("⚠️ Não achei a pasta de inimigos. Troque 'Enemies/Mobs/NPCs' no script se necessário.")
     end
 end
 
--- Criar botão no menu
+-- FUNÇÃO: IMORTALIDADE
+local imortal = false
+local function toggleImortalidade()
+    imortal = not imortal
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if imortal then
+            humanoid.MaxHealth = math.huge
+            humanoid.Health = math.huge
+            print("💀 Imortalidade ATIVADA!")
+        else
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+            print("💀 Imortalidade DESATIVADA!")
+        end
+    end
+end
+
+-- FUNÇÃO: EXCLUIR MENU
+local function excluirMenu()
+    screenGui:Destroy()
+    print("❌ Menu excluído com sucesso!")
+end
+
+-- BOTÕES
 createButton("Puxar Inimigos", puxarInimigos)
+createButton("Imortalidade", toggleImortalidade)
+createButton("Load Script", function()
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/bobmodsff/BOBMODSFF/refs/heads/main/lua%20robloxwe"))()
+    end)
+    if success then
+        print("✅ Script carregado com sucesso!")
+    else
+        warn("❌ Erro ao carregar o script: "..tostring(err))
+    end
+end)
+createButton("Excluir Menu", excluirMenu)
